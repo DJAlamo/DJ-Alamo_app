@@ -5,9 +5,9 @@
   "contactLabel": "Email",
   "backgroundColor": "#000000",
   "background": {
-    "enabled": false,
-    "type": "none",
-    "url": ""
+    "enabled": true,
+    "type": "image",
+    "url": "./media/background-image-1784043240774.png"
   },
   "heroMedia": {
     "enabled": true,
