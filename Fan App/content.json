@@ -1,7 +1,7 @@
 {
   "name": "DJ ALAMO",
   "bio": "",
-  "contactEmail": "Place Email",
+  "contactEmail": "DJalamobookings@gmail.com",
   "contactLabel": "Email",
   "backgroundColor": "#000000",
   "background": {
@@ -22,9 +22,11 @@
   },
   "pillColor": "#000000",
   "innerSurface": {
-    "style": "default",
-    "color": "",
-    "url": ""
+    "style": "video",
+    "color": "#050505",
+    "url": "./media/inner-surface-video-1784059186375.mp4",
+    "video": "./media/inner-surface-video-1784059186375.mp4",
+    "backgroundVideo": "./media/inner-surface-video-1784059186375.mp4"
   },
   "live": {
     "enabled": false,
