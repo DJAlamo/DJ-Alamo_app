@@ -54,12 +54,12 @@
   },
   "supporters": [],
   "community": {
-    "enabled": false,
+    "enabled": true,
     "provider": "custom",
-    "name": "",
-    "icon": "",
+    "name": "Link Up With Alamo",
+    "icon": "./media/community-icon-1785275255714.png",
     "buttonText": "Enter Community",
     "url": "",
-    "embed": ""
+    "embed": "https://organizations.minit.chat/393824317029654/c/Main?embed"
   }
 }
