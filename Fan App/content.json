@@ -34,14 +34,32 @@
     "watch_url": "",
     "description": ""
   },
-  "links": [],
+  "links": [
+    {
+      "label": "DJ ALAMO.COM",
+      "url": "https://djalamo.com/"
+    },
+    {
+      "label": "Instagram 📸",
+      "url": "https://www.instagram.com/iamdjalamo/"
+    }
+  ],
   "mediaGateway": {
-    "enabled": false,
+    "enabled": true,
     "collections": [
       {
-        "id": "collection-1783820011390-b6c047e8c036d8",
-        "title": "Add Media",
-        "items": []
+        "id": "collection-1785762357643-95db2dd98ae158",
+        "title": "Biography",
+        "items": [
+          {
+            "id": "item-1785762496010-2273e8d0a38918",
+            "title": "Biography",
+            "description": "Lear about DJ Alamo's career, accomplishments, and industry highlights.",
+            "thumbnail": "./media/thumb-item-1785762496010-2273e8d0a38918-1785762542001.png",
+            "url": "./media/media-item-1785762496010-2273e8d0a38918-1785762539181.png",
+            "access": "public"
+          }
+        ]
       }
     ],
     "presentation": {
