@@ -63,10 +63,12 @@
       }
     ],
     "presentation": {
-      "style": "default",
+      "style": "video",
       "color": "#050505",
-      "url": "",
-      "animation": "none"
+      "url": "./media/media-card-video-1785767784263.mp4",
+      "animation": "none",
+      "video": "./media/media-card-video-1785767784263.mp4",
+      "backgroundVideo": "./media/media-card-video-1785767784263.mp4"
     },
     "externalMedia": [
       {
