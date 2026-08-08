@@ -60,20 +60,6 @@
             "access": "public"
           }
         ]
-      },
-      {
-        "id": "collection-1786206506654-52e296cfcb3f2",
-        "title": "Set Me Free Video",
-        "items": [
-          {
-            "id": "item-1786206513945-df56d1afc4272",
-            "title": "Set Me Free",
-            "description": "",
-            "thumbnail": "./media/thumb-item-1786206513945-df56d1afc4272-1786206520058.jpg",
-            "url": "<iframe width=\"560\" height=\"315\" src=\"https://www.youtube.com/embed/AjTMWoxtu0I?si=IQMtjK6f9r8_uxZX\" title=\"YouTube video player\" frameborder=\"0\" allow=\"accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share\" referrerpolicy=\"strict-origin-when-cross-origin\" allowfullscreen></iframe>",
-            "access": "public"
-          }
-        ]
       }
     ],
     "presentation": {
@@ -95,7 +81,19 @@
       }
     ]
   },
-  "supporters": [],
+  "supporters": [
+    {
+      "id": "supporter-1786206667858-e61c32fb47ebc",
+      "type": "collaborator",
+      "name": "Set Me Free",
+      "tagline": "Dj Alamo Freeway",
+      "description": "",
+      "thumbnail": "./media/supporter-supporter-1786206667858-e61c32fb47ebc-1786206718538.jpg",
+      "url": "https://youtu.be/AjTMWoxtu0I?si=RWpTIN3owXg7yL7F",
+      "buttonText": "Open",
+      "enabled": true
+    }
+  ],
   "community": {
     "enabled": true,
     "provider": "custom",
