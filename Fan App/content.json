@@ -78,6 +78,16 @@
         "thumbnail": "./media/thumb-external-1785766448935-5615265f020d4-1785766463215.png",
         "buttonText": "Open Media",
         "enabled": true
+      },
+      {
+        "id": "external-1786206120996-9bebcb52bb25b",
+        "provider": "custom",
+        "name": "Set Me Free Video",
+        "url": "",
+        "embed": "<iframe width=\"560\" height=\"315\" src=\"https://www.youtube.com/embed/AjTMWoxtu0I?si=IQMtjK6f9r8_uxZX\" title=\"YouTube video player\" frameborder=\"0\" allow=\"accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share\" referrerpolicy=\"strict-origin-when-cross-origin\" allowfullscreen></iframe>",
+        "thumbnail": "./media/thumb-external-1786206120996-9bebcb52bb25b-1786206154280.jpg",
+        "buttonText": "Open Media",
+        "enabled": true
       }
     ]
   },
