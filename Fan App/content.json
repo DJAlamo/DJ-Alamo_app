@@ -130,6 +130,17 @@
       "url": "https://youtu.be/AjTMWoxtu0I?si=RWpTIN3owXg7yL7F",
       "buttonText": "Open",
       "enabled": true
+    },
+    {
+      "id": "supporter-1786404309753-da255ab9226ae",
+      "type": "venue",
+      "name": "Gasland Cartel",
+      "tagline": "",
+      "description": "",
+      "thumbnail": "./media/supporter-supporter-1786404309753-da255ab9226ae-1786404344907.jpeg",
+      "url": "https://www.instagram.com/p/DboQKAPAGzc/?utm_source=ig_web_copy_link&igsh=MzRlODBiNWFlZA==",
+      "buttonText": "visit",
+      "enabled": true
     }
   ],
   "community": {
