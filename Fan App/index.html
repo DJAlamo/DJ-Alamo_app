@@ -1540,6 +1540,7 @@ let launchIntroResolved=false
 let launchIntroTimer=null
 let heroHiddenByData=false
 let supportersHiddenByData=false
+let analyticsInitialized=false
 
 const installInfoBtn=document.getElementById("installInfoBtn")
 const installModal=document.getElementById("installModal")
@@ -4338,6 +4339,69 @@ return res.json();
 
 }
 
+function initAnalytics(d){
+
+try{
+
+const analytics=d && d.analytics;
+
+if(!analytics || analytics.enabled!==true) return;
+
+const snippet=String(analytics.snippet || "").trim();
+
+if(!snippet) return;
+
+const container=document.createElement("div");
+container.innerHTML=snippet;
+
+Array.from(container.childNodes).forEach(node=>{
+
+if(node.nodeType!==1) return;
+
+if(node.tagName==="SCRIPT"){
+
+const script=document.createElement("script");
+
+Array.from(node.attributes).forEach(attr=>{
+script.setAttribute(attr.name,attr.value);
+});
+
+const rawSrc=node.getAttribute("src");
+
+if(rawSrc){
+
+let resolvedSrc=rawSrc.trim();
+
+if(resolvedSrc.startsWith("//")){
+resolvedSrc="https:"+resolvedSrc;
+}
+
+const safeSrc=safeURL(resolvedSrc);
+
+if(!safeSrc) return;
+
+script.setAttribute("src",safeSrc);
+
+}else if(node.textContent){
+
+script.textContent=node.textContent;
+
+}
+
+document.body.appendChild(script);
+
+}else{
+
+document.body.appendChild(node.cloneNode(true));
+
+}
+
+});
+
+}catch(e){}
+
+}
+
 async function tick(){
 
 try{
@@ -4345,6 +4409,11 @@ try{
 const state=await fetchState();
 
 applyState(state);
+
+if(!analyticsInitialized){
+analyticsInitialized=true;
+initAnalytics(state);
+}
 
 }catch(e){}
 
