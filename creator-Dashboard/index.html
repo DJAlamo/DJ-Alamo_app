@@ -904,6 +904,48 @@ height:520px;
 
 </div>
 
+<div class="moduleBlock" data-module="analytics">
+
+<button type="button" class="moduleToggle">
+<div>
+<div class="moduleTitle">Analytics</div>
+<div class="moduleHint">Optional, provider-neutral traffic measurement. Off by default. Fan App loads normally either way.</div>
+</div>
+<div class="moduleArrow">›</div>
+</button>
+
+<div class="moduleContent">
+
+<div class="tiny">Optional aggregate traffic measurement. No fan accounts, no login, no behavioral profiles. The Fan App never depends on this being on.</div>
+
+<div class="toggleRow" style="margin-top:12px;">
+<div class="tiny">Only enabled analytics will publish into content.json and initialize in the Fan App.</div>
+<label style="display:flex;align-items:center;gap:10px;margin:0;">
+<span class="tiny">Enabled</span>
+<input id="analyticsEnabled" type="checkbox" style="width:auto;height:auto;">
+</label>
+</div>
+
+<div class="row" style="margin-top:12px;">
+<div class="col">
+<label>Provider</label>
+<input id="analyticsProvider" type="text" placeholder="goatcounter, ga, umami, plausible...">
+<div class="tiny">Any provider name. Base does not hardcode a specific provider.</div>
+</div>
+</div>
+
+<div class="row" style="margin-top:12px;">
+<div class="col">
+<label>Provider Configuration</label>
+<textarea id="analyticsConfig" placeholder='&lt;script data-goatcounter="https://yoursite.goatcounter.com/count" async src="//gc.zgo.at/count.js"&gt;&lt;/script&gt;'></textarea>
+<div class="tiny">Paste the exact embed code your provider gives you, whatever shape it comes in — a script tag, an inline snippet, or multiple tags. It runs on the Fan App exactly as given.</div>
+</div>
+</div>
+
+</div>
+
+</div>
+
 </div>
 
 </div>
@@ -1398,6 +1440,9 @@ communityUrl:$("communityUrl"),
 communityEmbed:$("communityEmbed"),
 btnAddCommunity:$("btnAddCommunity"),
 btnClearCommunity:$("btnClearCommunity"),
+analyticsEnabled:$("analyticsEnabled"),
+analyticsProvider:$("analyticsProvider"),
+analyticsConfig:$("analyticsConfig"),
 status:$("status"),
 repoLabel:$("repoLabel"),
 statePill:$("statePill"),
@@ -1417,6 +1462,8 @@ let supportersHydrated=false
 let supportersTouched=false
 let communityHydrated=false
 let communityTouched=false
+let analyticsHydrated=false
+let analyticsTouched=false
 let isPublishing=false
 let isDirty=false
 let loadedSha=null
@@ -1677,6 +1724,31 @@ embed:(el.communityEmbed.value || "").trim()
 
 }
 
+
+function hydrateAnalytics(state){
+
+analyticsHydrated=true
+
+const analytics=state && typeof state==="object" && state.analytics && typeof state.analytics==="object"
+? state.analytics
+: {}
+
+el.analyticsEnabled.checked=analytics.enabled===true
+el.analyticsProvider.value=analytics.provider || ""
+el.analyticsConfig.value=analytics.snippet || ""
+
+}
+
+function buildAnalytics(){
+if(!(analyticsHydrated || analyticsTouched)) return null
+
+return{
+enabled:el.analyticsEnabled.checked===true,
+provider:(el.analyticsProvider.value || "").trim(),
+snippet:(el.analyticsConfig.value || "").trim()
+}
+
+}
 
 function renderSupporters(){
 
@@ -2718,6 +2790,9 @@ if(supporters) payload.supporters=supporters
 const community=buildCommunity()
 if(community) payload.community=community
 
+const analytics=buildAnalytics()
+if(analytics) payload.analytics=analytics
+
 el.previewFrame.contentWindow.postMessage({
 type:"BASE_PREVIEW",
 payload
@@ -2884,6 +2959,11 @@ icon:"",
 buttonText:"Enter Community",
 url:"",
 embed:""
+},
+analytics:{
+enabled:false,
+provider:"",
+snippet:""
 }
 }
 
@@ -3717,6 +3797,7 @@ linkState=Array.isArray(state.links)?state.links:[]
 hydrateMediaGateway(state)
 hydrateSupporters(state)
 hydrateCommunity(state)
+hydrateAnalytics(state)
 
 renderLinks()
 
@@ -3782,6 +3863,8 @@ supportersHydrated=true
 supportersTouched=false
 communityHydrated=true
 communityTouched=false
+analyticsHydrated=true
+analyticsTouched=false
 
 renderLinks()
 renderMediaList()
@@ -4055,6 +4138,11 @@ if(community){
 merged.community=community
 }
 
+const analytics=buildAnalytics()
+if(analytics){
+merged.analytics=analytics
+}
+
 const result=await ghPutFile(
 token,
 TARGET_PATH,
@@ -4255,6 +4343,10 @@ el.communityButtonText.addEventListener("input",()=>{communityTouched=true;markD
 el.communityUrl.addEventListener("input",()=>{communityTouched=true;markDirty()})
 el.communityEmbed.addEventListener("input",()=>{communityTouched=true;markDirty()})
 
+el.analyticsEnabled.addEventListener("change",()=>{analyticsTouched=true;markDirty()})
+el.analyticsProvider.addEventListener("input",()=>{analyticsTouched=true;markDirty()})
+el.analyticsConfig.addEventListener("input",()=>{analyticsTouched=true;markDirty()})
+
 el.mediaEnabled.addEventListener("change",()=>{
 mediaTouched=true
 markDirty()
@@ -4321,10 +4413,13 @@ renderMediaList()
 renderExternalMediaList()
 renderSupporters()
 hydrateCommunity({})
+hydrateAnalytics({})
 hydrateBackground({})
 hydrateChime({})
 communityHydrated=false
 communityTouched=false
+analyticsHydrated=false
+analyticsTouched=false
 setPublishBusy(false)
 clearDirty()
 clearShaState()
