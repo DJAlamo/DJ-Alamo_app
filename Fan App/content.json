@@ -151,5 +151,10 @@
     "buttonText": "Enter Community",
     "url": "",
     "embed": "https://organizations.minnit.chat/393824317029654/c/Main?embed&app"
+  },
+  "analytics": {
+    "enabled": true,
+    "provider": "goat counter",
+    "snippet": "<script data-goatcounter=\"https://djalamo.goatcounter.com/count\"\n        async src=\"//gc.zgo.at/count.js\"></script>"
   }
 }
