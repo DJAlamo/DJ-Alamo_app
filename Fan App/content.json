@@ -7,7 +7,7 @@
   "background": {
     "enabled": true,
     "type": "image",
-    "url": "./media/background-image-1784043240774.png"
+    "url": "./media/background-image-1788193166270.jpg"
   },
   "heroMedia": {
     "enabled": true,
@@ -74,14 +74,6 @@
             "access": "public"
           },
           {
-            "id": "item-1786400865550-4bc1236d7b977",
-            "title": "Gasland Cartel",
-            "description": "",
-            "thumbnail": "./media/thumb-item-1786400865550-4bc1236d7b977-1786401029232.png",
-            "url": "./media/media-item-1786400865550-4bc1236d7b977-1786401028003.jpeg",
-            "access": "public"
-          },
-          {
             "id": "item-1786400918248-dfb2ea4711d638",
             "title": "Fetty Surf",
             "description": "",
@@ -129,17 +121,6 @@
       "thumbnail": "./media/supporter-supporter-1786206667858-e61c32fb47ebc-1786206718538.jpg",
       "url": "https://youtu.be/AjTMWoxtu0I?si=RWpTIN3owXg7yL7F",
       "buttonText": "Open",
-      "enabled": true
-    },
-    {
-      "id": "supporter-1786404309753-da255ab9226ae",
-      "type": "venue",
-      "name": "Gasland Cartel",
-      "tagline": "",
-      "description": "",
-      "thumbnail": "./media/supporter-supporter-1786404309753-da255ab9226ae-1786404344907.jpeg",
-      "url": "https://www.instagram.com/p/DboQKAPAGzc/?utm_source=ig_web_copy_link&igsh=MzRlODBiNWFlZA==",
-      "buttonText": "visit",
       "enabled": true
     }
   ],
