@@ -448,14 +448,14 @@ height:520px;
 <button type="button" class="moduleToggle">
 <div>
 <div class="moduleTitle">System Control</div>
-<div class="moduleHint">Creator key, content source, publishing connection, and loading controls.</div>
+<div class="moduleHint">Creator key, content source, and loading controls.</div>
 </div>
 <div class="moduleArrow">›</div>
 </button>
 
 <div class="moduleContent">
 
-<div class="tiny">Connect this deployment, load current state, or reset the creator key.</div>
+<div class="tiny">Use this when you need to load current state or reset the creator key.</div>
 
 <div class="row" style="margin-top:12px;">
 <div class="col">
@@ -1356,8 +1356,6 @@ src="../Fan App/index.html?basePreviewShell=1">
 const TARGET_PATH="Fan App/content.json"
 const DEFAULT_CONTENT_URL=new URL("../Fan App/content.json",window.location.href).href
 const LS_TOKEN="base_creator_token_v1"
-const LS_PUBLISHER_MODULE="base_publisher_module_v1"
-const LS_PUBLISHER_CONFIG="base_publisher_config_v1"
 
 const $=id=>document.getElementById(id)
 
@@ -1530,12 +1528,22 @@ const signature=`${absoluteUrl}\n${JSON.stringify(config)}`
 
 if(publisherClient && publisherSignature===signature)return publisherClient
 
-const loaded=await import(absoluteUrl)
-const factory=loaded?.createPublisher || loaded?.default
-if(typeof factory!=="function")throw new Error("Publishing module must export createPublisher(config).")
+window.__BASE_PUBLISHER_FACTORY__=null
+
+await new Promise((resolve,reject)=>{
+const script=document.createElement("script")
+script.src=absoluteUrl+(absoluteUrl.includes("?") ? "&" : "?")+"baseModuleTs="+Date.now()
+script.async=true
+script.onload=()=>resolve()
+script.onerror=()=>reject(new Error("Publishing module could not be loaded."))
+document.head.appendChild(script)
+})
+
+const factory=window.__BASE_PUBLISHER_FACTORY__
+if(typeof factory!=="function")throw new Error("Publishing module did not register a publisher factory.")
 
 const client=await factory(config)
-const required=["getFileMeta","putFile","listDirectory","deleteFile"]
+const required=["readFile","getFileMeta","putFile","listDirectory","deleteFile"]
 required.forEach(name=>{
 if(typeof client?.[name]!=="function")throw new Error(`Publishing module missing ${name}().`)
 })
@@ -1546,6 +1554,11 @@ if(el.publishingLabel){
 el.publishingLabel.textContent=String(client.label || moduleValue)
 }
 return client
+}
+
+async function publisherReadFile(token,path,sourceUrl){
+const publisher=await getPublisherClient()
+return publisher.readFile(token,path,sourceUrl)
 }
 
 async function publisherGetFileMeta(token,path){
@@ -1654,29 +1667,6 @@ el.lastVersion.textContent="version: —"
 enablePublishIfReady()
 }
 
-async function syncLoadedVersion(){
-const token=(el.token.value||"").trim()
-
-if(!token){
-clearVersionState()
-return
-}
-
-try{
-const meta=await publisherGetFileMeta(token,TARGET_PATH)
-loadedVersion=meta?.version || null
-versionConflict=false
-el.lastVersion.textContent=loadedVersion ? `version: ${loadedVersion}` : "version: —"
-}catch(e){
-loadedVersion=null
-versionConflict=false
-el.lastVersion.textContent="version: —"
-log(`Version sync failed: ${e.message}`)
-}
-
-enablePublishIfReady()
-}
-
 async function fetchState(){
 const raw=(el.contentUrl.value||DEFAULT_CONTENT_URL).trim() || DEFAULT_CONTENT_URL
 const url=new URL(raw)
@@ -1684,6 +1674,28 @@ url.searchParams.set("ts",Date.now())
 const res=await fetch(url.toString(),{cache:"no-store"})
 if(!res.ok) throw new Error(`content.json load failed (${res.status})`)
 return res.json()
+}
+
+async function fetchStateWithVersion(){
+const token=(el.token.value||"").trim()
+const sourceUrl=(el.contentUrl.value||DEFAULT_CONTENT_URL).trim() || DEFAULT_CONTENT_URL
+
+if(!token || !getPublisherModuleUrl()){
+const state=await fetchState()
+return {state,version:null}
+}
+
+const loaded=await publisherReadFile(token,TARGET_PATH,sourceUrl)
+if(!loaded || typeof loaded!=="object")throw new Error("Publishing module returned an invalid read result.")
+
+let state=loaded.content
+if(typeof state==="string"){
+try{ state=JSON.parse(state) }
+catch(e){ throw new Error("Publishing module returned invalid content.json data.") }
+}
+if(!state || typeof state!=="object" || Array.isArray(state))throw new Error("Publishing module returned invalid content.json data.")
+
+return {state,version:loaded.version || null}
 }
 
 function renderLinks(){
@@ -1756,13 +1768,13 @@ embed:(el.communityEmbed.value || "").trim()
 async function uploadCommunityIcon(token,file){
 const safeExt=getSafeMediaThumbExtension(file)
 const fileName=`community-icon-${Date.now()}.${safeExt}`
-const remotePath=`Fan App/media/${fileName}`
+const repoPath=`Fan App/media/${fileName}`
 const localPath=`./media/${fileName}`
 const base64=await fileToBase64(file)
 
 await publisherPutFile(
 token,
-remotePath,
+repoPath,
 undefined,
 base64,
 `BASE community icon ${fileName}`
@@ -1914,13 +1926,13 @@ async function uploadSupporterThumbnail(token,file,itemId){
 const safeExt=getSafeMediaThumbExtension(file)
 const safeId=String(itemId || `supporter-${Date.now()}`).replace(/[^a-zA-Z0-9_-]/g,"")
 const fileName=`supporter-${safeId}-${Date.now()}.${safeExt}`
-const remotePath=`Fan App/media/${fileName}`
+const repoPath=`Fan App/media/${fileName}`
 const localPath=`./media/${fileName}`
 const base64=await fileToBase64(file)
 
 await publisherPutFile(
 token,
-remotePath,
+repoPath,
 undefined,
 base64,
 `BASE supporter thumbnail ${fileName}`
@@ -2327,13 +2339,13 @@ async function uploadBackgroundAsset(token,file,type){
 const safeType=type==="video" ? "video" : "image"
 const safeExt=getSafeBackgroundExtension(file,safeType)
 const fileName=`background-${safeType}-${Date.now()}.${safeExt}`
-const remotePath=`Fan App/media/${fileName}`
+const repoPath=`Fan App/media/${fileName}`
 const localPath=`./media/${fileName}`
 const base64=await fileToBase64(file)
 
 await publisherPutFile(
 token,
-remotePath,
+repoPath,
 undefined,
 base64,
 `BASE background ${safeType} ${fileName}`
@@ -2425,13 +2437,13 @@ async function uploadHeroMediaAsset(token,file,type){
 const safeType=type==="video" ? "video" : "image"
 const safeExt=getSafeBackgroundExtension(file,safeType)
 const fileName=`hero-${safeType}-${Date.now()}.${safeExt}`
-const remotePath=`Fan App/media/${fileName}`
+const repoPath=`Fan App/media/${fileName}`
 const localPath=`./media/${fileName}`
 const base64=await fileToBase64(file)
 
 await publisherPutFile(
 token,
-remotePath,
+repoPath,
 undefined,
 base64,
 `BASE hero ${safeType} ${fileName}`
@@ -2521,13 +2533,13 @@ async function uploadMediaCardAsset(token,file,style){
 const safeType=style==="video" ? "video" : "image"
 const safeExt=getSafeBackgroundExtension(file,safeType)
 const fileName=`media-card-${safeType}-${Date.now()}.${safeExt}`
-const remotePath=`Fan App/media/${fileName}`
+const repoPath=`Fan App/media/${fileName}`
 const localPath=`./media/${fileName}`
 const base64=await fileToBase64(file)
 
 await publisherPutFile(
 token,
-remotePath,
+repoPath,
 undefined,
 base64,
 `BASE media card ${safeType} ${fileName}`
@@ -2650,13 +2662,13 @@ async function uploadInnerSurfaceAsset(token,file,style){
 const safeType=style==="video" ? "video" : "image"
 const safeExt=getSafeBackgroundExtension(file,safeType)
 const fileName=`inner-surface-${safeType}-${Date.now()}.${safeExt}`
-const remotePath=`Fan App/media/${fileName}`
+const repoPath=`Fan App/media/${fileName}`
 const localPath=`./media/${fileName}`
 const base64=await fileToBase64(file)
 
 await publisherPutFile(
 token,
-remotePath,
+repoPath,
 undefined,
 base64,
 `BASE inner surface ${safeType} ${fileName}`
@@ -2764,13 +2776,13 @@ return "mp3"
 async function uploadChimeAsset(token,file){
 const safeExt=getSafeChimeExtension(file)
 const fileName=`chime-${Date.now()}.${safeExt}`
-const remotePath=`Fan App/media/${fileName}`
+const repoPath=`Fan App/media/${fileName}`
 const localPath=`./media/${fileName}`
 const base64=await fileToBase64(file)
 
 await publisherPutFile(
 token,
-remotePath,
+repoPath,
 undefined,
 base64,
 `BASE chime ${fileName}`
@@ -3207,13 +3219,13 @@ async function uploadMediaThumbnail(token,file,itemId){
 const safeExt=getSafeMediaThumbExtension(file)
 const safeId=String(itemId || `item-${Date.now()}`).replace(/[^a-zA-Z0-9_-]/g,"")
 const fileName=`thumb-${safeId}-${Date.now()}.${safeExt}`
-const remotePath=`Fan App/media/${fileName}`
+const repoPath=`Fan App/media/${fileName}`
 const localPath=`./media/${fileName}`
 const base64=await fileToBase64(file)
 
 await publisherPutFile(
 token,
-remotePath,
+repoPath,
 undefined,
 base64,
 `BASE media thumbnail ${fileName}`
@@ -3226,13 +3238,13 @@ async function uploadMediaFile(token,file,itemId){
 const safeExt=getSafeMediaExtension(file)
 const safeId=String(itemId || `item-${Date.now()}`).replace(/[^a-zA-Z0-9_-]/g,"")
 const fileName=`media-${safeId}-${Date.now()}.${safeExt}`
-const remotePath=`Fan App/media/${fileName}`
+const repoPath=`Fan App/media/${fileName}`
 const localPath=`./media/${fileName}`
 const base64=await fileToBase64(file)
 
 await publisherPutFile(
 token,
-remotePath,
+repoPath,
 undefined,
 base64,
 `BASE media file ${fileName}`
@@ -3765,7 +3777,11 @@ try{
 
 setPill("warn","STATUS: loading…")
 
-const state=await fetchState()
+const loaded=await fetchStateWithVersion()
+const state=loaded.state
+loadedVersion=loaded.version || null
+versionConflict=false
+el.lastVersion.textContent=loadedVersion ? `version: ${loadedVersion}` : "version: —"
 
 el.name.value=state.name||""
 el.bio.value=state.bio||""
@@ -3791,7 +3807,6 @@ renderLinks()
 
 hasLoadedState=true
 clearDirty()
-await syncLoadedVersion()
 
 setPill("warn","STATUS: loaded")
 log("Loaded current state.")
@@ -4222,18 +4237,14 @@ setPublishBusy(false)
 }
 
 el.publisherModuleUrl.addEventListener("input",()=>{
-const value=getPublisherModuleUrl()
-if(value)localStorage.setItem(LS_PUBLISHER_MODULE,value)
-else localStorage.removeItem(LS_PUBLISHER_MODULE)
 clearPublisherClient()
+hasLoadedState=false
 clearVersionState()
 })
 
 el.publisherConfig.addEventListener("input",()=>{
-const value=String(el.publisherConfig.value || "")
-if(value.trim())localStorage.setItem(LS_PUBLISHER_CONFIG,value)
-else localStorage.removeItem(LS_PUBLISHER_CONFIG)
 clearPublisherClient()
+hasLoadedState=false
 clearVersionState()
 })
 
@@ -4247,7 +4258,9 @@ localStorage.removeItem(LS_TOKEN)
 }
 
 if(hasLoadedState){
-await syncLoadedVersion()
+hasLoadedState=false
+clearVersionState()
+log("Creator key changed. Reload Current State before publishing.")
 }else{
 enablePublishIfReady()
 }
@@ -4404,11 +4417,6 @@ initModules()
 el.publishingLabel.textContent="not connected"
 el.contentUrl.value=DEFAULT_CONTENT_URL
 
-const savedPublisherModule=(localStorage.getItem(LS_PUBLISHER_MODULE)||"").trim()
-if(savedPublisherModule)el.publisherModuleUrl.value=savedPublisherModule
-
-const savedPublisherConfig=localStorage.getItem(LS_PUBLISHER_CONFIG)||""
-if(savedPublisherConfig)el.publisherConfig.value=savedPublisherConfig
 
 const saved=(localStorage.getItem(LS_TOKEN)||"").trim()
 if(saved){
