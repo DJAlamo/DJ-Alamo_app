@@ -448,14 +448,14 @@ height:520px;
 <button type="button" class="moduleToggle">
 <div>
 <div class="moduleTitle">System Control</div>
-<div class="moduleHint">Creator key, content source, and loading controls.</div>
+<div class="moduleHint">Creator key, content source, publishing connection, and loading controls.</div>
 </div>
 <div class="moduleArrow">›</div>
 </button>
 
 <div class="moduleContent">
 
-<div class="tiny">Use this when you need to load current state or reset the creator key.</div>
+<div class="tiny">Connect this deployment, load current state, or reset the creator key.</div>
 
 <div class="row" style="margin-top:12px;">
 <div class="col">
@@ -469,11 +469,27 @@ height:520px;
 </div>
 </div>
 
+<div class="row" style="margin-top:12px;">
+<div class="col">
+<label>Publishing Module URL</label>
+<input id="publisherModuleUrl" type="text" placeholder="./publisher-module.js">
+<div class="tiny">Connect the dashboard to the publishing module used by this deployment.</div>
+</div>
+</div>
+
+<div class="row" style="margin-top:12px;">
+<div class="col">
+<label>Publishing Configuration</label>
+<textarea id="publisherConfig" placeholder='{"setting":"value"}'></textarea>
+<div class="tiny">Configuration belongs to the selected publishing module, not to BASE core.</div>
+</div>
+</div>
+
 <div class="btnRow">
 <button id="btnLoad" class="primary">Load Current State</button>
 </div>
 
-<div class="tiny" id="lastSha">sha: —</div>
+<div class="tiny" id="lastVersion">version: —</div>
 
 </div>
 
@@ -1308,7 +1324,7 @@ src="../Fan App/index.html?basePreviewShell=1">
 <div style="display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap;">
 
 <div>
-<div>Repo: <span id="repoLabel"></span></div>
+<div>Publishing: <span id="publishingLabel"></span></div>
 <div class="tiny">Target: Fan App/content.json</div>
 </div>
 
@@ -1337,19 +1353,19 @@ src="../Fan App/index.html?basePreviewShell=1">
 
 <script>
 
-const OWNER = "DJAlamo"
-const REPO = "DJ-Alamo_app"
-const BRANCH="main"
-
 const TARGET_PATH="Fan App/content.json"
-const DEFAULT_CONTENT_URL=`https://${OWNER}.github.io/${REPO}/Fan%20App/content.json`
+const DEFAULT_CONTENT_URL=new URL("../Fan App/content.json",window.location.href).href
 const LS_TOKEN="base_creator_token_v1"
+const LS_PUBLISHER_MODULE="base_publisher_module_v1"
+const LS_PUBLISHER_CONFIG="base_publisher_config_v1"
 
 const $=id=>document.getElementById(id)
 
 const el={
 token:$("token"),
 contentUrl:$("contentUrl"),
+publisherModuleUrl:$("publisherModuleUrl"),
+publisherConfig:$("publisherConfig"),
 btnLoad:$("btnLoad"),
 btnPublish:$("btnPublish"),
 btnPrepareCleanTemplate:$("btnPrepareCleanTemplate"),
@@ -1444,9 +1460,9 @@ analyticsEnabled:$("analyticsEnabled"),
 analyticsProvider:$("analyticsProvider"),
 analyticsConfig:$("analyticsConfig"),
 status:$("status"),
-repoLabel:$("repoLabel"),
+publishingLabel:$("publishingLabel"),
 statePill:$("statePill"),
-lastSha:$("lastSha"),
+lastVersion:$("lastVersion"),
 previewFrame:$("fanPreviewFrame")
 }
 
@@ -1466,8 +1482,8 @@ let analyticsHydrated=false
 let analyticsTouched=false
 let isPublishing=false
 let isDirty=false
-let loadedSha=null
-let shaConflict=false
+let loadedVersion=null
+let versionConflict=false
 let appIconResetRequested=false
 const defaultPublishLabel="Publish"
 
@@ -1481,17 +1497,75 @@ el.statePill.className=`pill ${type}`
 el.statePill.textContent=text
 }
 
-function ghEncodePath(path){
-return path.split("/").map(encodeURIComponent).join("/")
+let publisherClient=null
+let publisherSignature=""
+
+function getPublisherModuleUrl(){
+return String(el.publisherModuleUrl?.value || "").trim()
 }
 
-function ghHeaders(token){
-return{
-Accept:"application/vnd.github+json",
-Authorization:`Bearer ${String(token||"").trim()}`,
-"X-GitHub-Api-Version":"2022-11-28",
-"Content-Type":"application/json"
+function getPublisherConfig(){
+const raw=String(el.publisherConfig?.value || "").trim()
+if(!raw)return{}
+try{
+return JSON.parse(raw)
+}catch(e){
+throw new Error("Publishing configuration must be valid JSON.")
 }
+}
+
+function clearPublisherClient(){
+publisherClient=null
+publisherSignature=""
+if(el.publishingLabel)el.publishingLabel.textContent="not connected"
+}
+
+async function getPublisherClient(){
+const moduleValue=getPublisherModuleUrl()
+if(!moduleValue)throw new Error("Publishing Module URL is required.")
+
+const absoluteUrl=new URL(moduleValue,window.location.href).href
+const config=getPublisherConfig()
+const signature=`${absoluteUrl}\n${JSON.stringify(config)}`
+
+if(publisherClient && publisherSignature===signature)return publisherClient
+
+const loaded=await import(absoluteUrl)
+const factory=loaded?.createPublisher || loaded?.default
+if(typeof factory!=="function")throw new Error("Publishing module must export createPublisher(config).")
+
+const client=await factory(config)
+const required=["getFileMeta","putFile","listDirectory","deleteFile"]
+required.forEach(name=>{
+if(typeof client?.[name]!=="function")throw new Error(`Publishing module missing ${name}().`)
+})
+
+publisherClient=client
+publisherSignature=signature
+if(el.publishingLabel){
+el.publishingLabel.textContent=String(client.label || moduleValue)
+}
+return client
+}
+
+async function publisherGetFileMeta(token,path){
+const publisher=await getPublisherClient()
+return publisher.getFileMeta(token,path)
+}
+
+async function publisherPutFile(token,path,version,contentBase64,message){
+const publisher=await getPublisherClient()
+return publisher.putFile(token,path,version,contentBase64,message)
+}
+
+async function publisherListDirectory(token,path){
+const publisher=await getPublisherClient()
+return publisher.listDirectory(token,path)
+}
+
+async function publisherDeleteFile(token,path,version,message){
+const publisher=await getPublisherClient()
+return publisher.deleteFile(token,path,version,message)
 }
 
 function toBase64Utf8(str){
@@ -1549,8 +1623,8 @@ return found ? found.title : "Latest"
 
 function enablePublishIfReady(){
 const hasToken=(el.token.value||"").trim().length>0
-const hasSha=String(loadedSha||"").trim().length>0
-el.btnPublish.disabled=!!isPublishing || !(hasLoadedState && hasToken && isDirty && hasSha && !shaConflict)
+const hasVersion=String(loadedVersion||"").trim().length>0
+el.btnPublish.disabled=!!isPublishing || !(hasLoadedState && hasToken && isDirty && hasVersion && !versionConflict)
 refreshPreview()
 }
 
@@ -1573,31 +1647,31 @@ isDirty=false
 enablePublishIfReady()
 }
 
-function clearShaState(){
-loadedSha=null
-shaConflict=false
-el.lastSha.textContent="sha: —"
+function clearVersionState(){
+loadedVersion=null
+versionConflict=false
+el.lastVersion.textContent="version: —"
 enablePublishIfReady()
 }
 
-async function syncLoadedSha(){
+async function syncLoadedVersion(){
 const token=(el.token.value||"").trim()
 
 if(!token){
-clearShaState()
+clearVersionState()
 return
 }
 
 try{
-const meta=await ghGetFileMeta(token,TARGET_PATH)
-loadedSha=meta?.sha || null
-shaConflict=false
-el.lastSha.textContent=loadedSha ? `sha: ${loadedSha}` : "sha: —"
+const meta=await publisherGetFileMeta(token,TARGET_PATH)
+loadedVersion=meta?.version || null
+versionConflict=false
+el.lastVersion.textContent=loadedVersion ? `version: ${loadedVersion}` : "version: —"
 }catch(e){
-loadedSha=null
-shaConflict=false
-el.lastSha.textContent="sha: —"
-log(`SHA sync failed: ${e.message}`)
+loadedVersion=null
+versionConflict=false
+el.lastVersion.textContent="version: —"
+log(`Version sync failed: ${e.message}`)
 }
 
 enablePublishIfReady()
@@ -1682,13 +1756,13 @@ embed:(el.communityEmbed.value || "").trim()
 async function uploadCommunityIcon(token,file){
 const safeExt=getSafeMediaThumbExtension(file)
 const fileName=`community-icon-${Date.now()}.${safeExt}`
-const repoPath=`Fan App/media/${fileName}`
+const remotePath=`Fan App/media/${fileName}`
 const localPath=`./media/${fileName}`
 const base64=await fileToBase64(file)
 
-await ghPutFile(
+await publisherPutFile(
 token,
-repoPath,
+remotePath,
 undefined,
 base64,
 `BASE community icon ${fileName}`
@@ -1840,13 +1914,13 @@ async function uploadSupporterThumbnail(token,file,itemId){
 const safeExt=getSafeMediaThumbExtension(file)
 const safeId=String(itemId || `supporter-${Date.now()}`).replace(/[^a-zA-Z0-9_-]/g,"")
 const fileName=`supporter-${safeId}-${Date.now()}.${safeExt}`
-const repoPath=`Fan App/media/${fileName}`
+const remotePath=`Fan App/media/${fileName}`
 const localPath=`./media/${fileName}`
 const base64=await fileToBase64(file)
 
-await ghPutFile(
+await publisherPutFile(
 token,
-repoPath,
+remotePath,
 undefined,
 base64,
 `BASE supporter thumbnail ${fileName}`
@@ -2253,13 +2327,13 @@ async function uploadBackgroundAsset(token,file,type){
 const safeType=type==="video" ? "video" : "image"
 const safeExt=getSafeBackgroundExtension(file,safeType)
 const fileName=`background-${safeType}-${Date.now()}.${safeExt}`
-const repoPath=`Fan App/media/${fileName}`
+const remotePath=`Fan App/media/${fileName}`
 const localPath=`./media/${fileName}`
 const base64=await fileToBase64(file)
 
-await ghPutFile(
+await publisherPutFile(
 token,
-repoPath,
+remotePath,
 undefined,
 base64,
 `BASE background ${safeType} ${fileName}`
@@ -2351,13 +2425,13 @@ async function uploadHeroMediaAsset(token,file,type){
 const safeType=type==="video" ? "video" : "image"
 const safeExt=getSafeBackgroundExtension(file,safeType)
 const fileName=`hero-${safeType}-${Date.now()}.${safeExt}`
-const repoPath=`Fan App/media/${fileName}`
+const remotePath=`Fan App/media/${fileName}`
 const localPath=`./media/${fileName}`
 const base64=await fileToBase64(file)
 
-await ghPutFile(
+await publisherPutFile(
 token,
-repoPath,
+remotePath,
 undefined,
 base64,
 `BASE hero ${safeType} ${fileName}`
@@ -2447,13 +2521,13 @@ async function uploadMediaCardAsset(token,file,style){
 const safeType=style==="video" ? "video" : "image"
 const safeExt=getSafeBackgroundExtension(file,safeType)
 const fileName=`media-card-${safeType}-${Date.now()}.${safeExt}`
-const repoPath=`Fan App/media/${fileName}`
+const remotePath=`Fan App/media/${fileName}`
 const localPath=`./media/${fileName}`
 const base64=await fileToBase64(file)
 
-await ghPutFile(
+await publisherPutFile(
 token,
-repoPath,
+remotePath,
 undefined,
 base64,
 `BASE media card ${safeType} ${fileName}`
@@ -2576,13 +2650,13 @@ async function uploadInnerSurfaceAsset(token,file,style){
 const safeType=style==="video" ? "video" : "image"
 const safeExt=getSafeBackgroundExtension(file,safeType)
 const fileName=`inner-surface-${safeType}-${Date.now()}.${safeExt}`
-const repoPath=`Fan App/media/${fileName}`
+const remotePath=`Fan App/media/${fileName}`
 const localPath=`./media/${fileName}`
 const base64=await fileToBase64(file)
 
-await ghPutFile(
+await publisherPutFile(
 token,
-repoPath,
+remotePath,
 undefined,
 base64,
 `BASE inner surface ${safeType} ${fileName}`
@@ -2690,13 +2764,13 @@ return "mp3"
 async function uploadChimeAsset(token,file){
 const safeExt=getSafeChimeExtension(file)
 const fileName=`chime-${Date.now()}.${safeExt}`
-const repoPath=`Fan App/media/${fileName}`
+const remotePath=`Fan App/media/${fileName}`
 const localPath=`./media/${fileName}`
 const base64=await fileToBase64(file)
 
-await ghPutFile(
+await publisherPutFile(
 token,
-repoPath,
+remotePath,
 undefined,
 base64,
 `BASE chime ${fileName}`
@@ -2801,86 +2875,9 @@ payload
 
 }
 
-async function ghGetFileMeta(token,path){
-
-const api=`https://api.github.com/repos/${OWNER}/${REPO}/contents/${ghEncodePath(path)}?ref=${BRANCH}`
-
-const res=await fetch(api,{headers:ghHeaders(token)})
-
-if(!res.ok)throw new Error(`GitHub GET failed (${res.status})`)
-
-return res.json()
-
-}
-
-async function ghPutFile(token,path,sha,contentBase64,message){
-
-const api=`https://api.github.com/repos/${OWNER}/${REPO}/contents/${ghEncodePath(path)}`
-
-const body={
-message,
-content:contentBase64,
-branch:BRANCH
-}
-
-if(sha)body.sha=sha
-
-const res=await fetch(api,{
-method:"PUT",
-headers:ghHeaders(token),
-body:JSON.stringify(body)
-})
-
-if(!res.ok)throw new Error(`GitHub PUT failed (${res.status})`)
-
-return res.json()
-
-}
-
-async function ghListDirectory(token,path){
-
-const api=`https://api.github.com/repos/${OWNER}/${REPO}/contents/${ghEncodePath(path)}?ref=${BRANCH}`
-const res=await fetch(api,{headers:ghHeaders(token)})
-
-if(res.status===404){
-return []
-}
-
-if(!res.ok){
-throw new Error(`GitHub directory read failed (${res.status}): ${path}`)
-}
-
-const data=await res.json()
-
-return Array.isArray(data) ? data : []
-
-}
-
-async function ghDeleteFile(token,path,sha,message){
-
-const api=`https://api.github.com/repos/${OWNER}/${REPO}/contents/${ghEncodePath(path)}`
-
-const res=await fetch(api,{
-method:"DELETE",
-headers:ghHeaders(token),
-body:JSON.stringify({
-message,
-sha,
-branch:BRANCH
-})
-})
-
-if(!res.ok){
-throw new Error(`GitHub DELETE failed (${res.status}): ${path}`)
-}
-
-return res.json()
-
-}
-
 async function deleteDirectoryFiles(token,path,keepNames){
 
-const files=await ghListDirectory(token,path)
+const files=await publisherListDirectory(token,path)
 const keep=new Set(Array.isArray(keepNames) ? keepNames : [])
 let deleted=0
 
@@ -2888,10 +2885,10 @@ for(const file of files){
 if(file.type!=="file") continue
 if(keep.has(file.name)) continue
 
-await ghDeleteFile(
+await publisherDeleteFile(
 token,
 file.path,
-file.sha,
+file.version,
 `BASE clean template remove ${file.path}`
 )
 
@@ -2993,7 +2990,7 @@ const icon512Name=`icon-512-v${newVersion}.png`
 const base192=await makeBaseTemplateIconBase64(192)
 const base512=await makeBaseTemplateIconBase64(512)
 
-await ghPutFile(
+await publisherPutFile(
 token,
 `Fan App/icons/${icon192Name}`,
 undefined,
@@ -3001,7 +2998,7 @@ base192,
 `BASE clean template icon v${newVersion} (192)`
 )
 
-await ghPutFile(
+await publisherPutFile(
 token,
 `Fan App/icons/${icon512Name}`,
 undefined,
@@ -3018,7 +3015,7 @@ const deletedIcons=await deleteDirectoryFiles(token,"Fan App/icons",[icon192Name
 log(`Fan App/icons cleaned. Removed ${deletedIcons} old icon file(s).`)
 
 const manifestPath="Fan App/manifest.json"
-const manifestMeta=await ghGetFileMeta(token,manifestPath)
+const manifestMeta=await publisherGetFileMeta(token,manifestPath)
 
 let manifest={}
 try{
@@ -3042,27 +3039,27 @@ type:"image/png"
 }
 ]
 
-await ghPutFile(
+await publisherPutFile(
 token,
 manifestPath,
-manifestMeta.sha,
+manifestMeta.version,
 toBase64Utf8(JSON.stringify(manifest,null,2)),
 `BASE clean template manifest v${newVersion}`
 )
 
 const cleanContent=buildCleanTemplateContent()
-const contentMeta=await ghGetFileMeta(token,TARGET_PATH)
+const contentMeta=await publisherGetFileMeta(token,TARGET_PATH)
 
-const result=await ghPutFile(
+const result=await publisherPutFile(
 token,
 TARGET_PATH,
-contentMeta.sha,
+contentMeta.version,
 toBase64Utf8(JSON.stringify(cleanContent,null,2)),
 "BASE clean template content reset"
 )
 
 const fanIndexPath="Fan App/index.html"
-const fanIndexMeta=await ghGetFileMeta(token,fanIndexPath)
+const fanIndexMeta=await publisherGetFileMeta(token,fanIndexPath)
 let fanIndexHtml=fromBase64Utf8(fanIndexMeta.content)
 const cacheVersion=Date.now()
 
@@ -3106,18 +3103,19 @@ fanIndexHtml=fanIndexHtml.replace(
 `<img id="logo" src="icons/${icon192Name}?v=${cacheVersion}">`
 )
 
-await ghPutFile(
+await publisherPutFile(
 token,
 fanIndexPath,
-fanIndexMeta.sha,
+fanIndexMeta.version,
 toBase64Utf8(fanIndexHtml),
 "BASE clean template HTML sync"
 )
 
-if(result?.content?.sha){
-loadedSha=result.content.sha
-shaConflict=false
-el.lastSha.textContent=`sha: ${result.content.sha}`
+const publishedVersion=result?.version || null
+if(publishedVersion){
+loadedVersion=publishedVersion
+versionConflict=false
+el.lastVersion.textContent=`version: ${publishedVersion}`
 }
 
 return{
@@ -3209,13 +3207,13 @@ async function uploadMediaThumbnail(token,file,itemId){
 const safeExt=getSafeMediaThumbExtension(file)
 const safeId=String(itemId || `item-${Date.now()}`).replace(/[^a-zA-Z0-9_-]/g,"")
 const fileName=`thumb-${safeId}-${Date.now()}.${safeExt}`
-const repoPath=`Fan App/media/${fileName}`
+const remotePath=`Fan App/media/${fileName}`
 const localPath=`./media/${fileName}`
 const base64=await fileToBase64(file)
 
-await ghPutFile(
+await publisherPutFile(
 token,
-repoPath,
+remotePath,
 undefined,
 base64,
 `BASE media thumbnail ${fileName}`
@@ -3228,13 +3226,13 @@ async function uploadMediaFile(token,file,itemId){
 const safeExt=getSafeMediaExtension(file)
 const safeId=String(itemId || `item-${Date.now()}`).replace(/[^a-zA-Z0-9_-]/g,"")
 const fileName=`media-${safeId}-${Date.now()}.${safeExt}`
-const repoPath=`Fan App/media/${fileName}`
+const remotePath=`Fan App/media/${fileName}`
 const localPath=`./media/${fileName}`
 const base64=await fileToBase64(file)
 
-await ghPutFile(
+await publisherPutFile(
 token,
-repoPath,
+remotePath,
 undefined,
 base64,
 `BASE media file ${fileName}`
@@ -3334,12 +3332,7 @@ externalMedia
 
 async function getLatestIconVersion(token){
 const folderPath="Fan App/icons"
-const api=`https://api.github.com/repos/${OWNER}/${REPO}/contents/${ghEncodePath(folderPath)}?ref=${BRANCH}`
-const res=await fetch(api,{headers:ghHeaders(token)})
-
-if(!res.ok) throw new Error(`GitHub icons folder read failed (${res.status})`)
-
-const files=await res.json()
+const files=await publisherListDirectory(token,folderPath)
 
 let latest192=null
 let latest512=null
@@ -3379,12 +3372,7 @@ icon512Name:latest512.name
 
 async function getBaseIconVersion(token){
 const folderPath="Fan App/icons"
-const api=`https://api.github.com/repos/${OWNER}/${REPO}/contents/${ghEncodePath(folderPath)}?ref=${BRANCH}`
-const res=await fetch(api,{headers:ghHeaders(token)})
-
-if(!res.ok) throw new Error(`GitHub icons folder read failed (${res.status})`)
-
-const files=await res.json()
+const files=await publisherListDirectory(token,folderPath)
 
 let base192=null
 let base512=null
@@ -3466,7 +3454,7 @@ const new512Name=`icon-512-v${newVersion}.png`
 const new192Path=`Fan App/icons/${new192Name}`
 const new512Path=`Fan App/icons/${new512Name}`
 
-await ghPutFile(
+await publisherPutFile(
 token,
 new192Path,
 undefined,
@@ -3474,7 +3462,7 @@ base64,
 `BASE icon v${newVersion} (192)`
 )
 
-await ghPutFile(
+await publisherPutFile(
 token,
 new512Path,
 undefined,
@@ -3483,7 +3471,7 @@ base64,
 )
 
 const manifestPath="Fan App/manifest.json"
-const manifestMeta=await ghGetFileMeta(token,manifestPath)
+const manifestMeta=await publisherGetFileMeta(token,manifestPath)
 
 let manifest={}
 try{
@@ -3505,16 +3493,16 @@ type:"image/png"
 }
 ]
 
-await ghPutFile(
+await publisherPutFile(
 token,
 manifestPath,
-manifestMeta.sha,
+manifestMeta.version,
 toBase64Utf8(JSON.stringify(manifest,null,2)),
 `BASE manifest icon v${newVersion}`
 )
 
 const fanIndexPath="Fan App/index.html"
-const fanIndexMeta=await ghGetFileMeta(token,fanIndexPath)
+const fanIndexMeta=await publisherGetFileMeta(token,fanIndexPath)
 let fanIndexHtml=fromBase64Utf8(fanIndexMeta.content)
 
 fanIndexHtml=fanIndexHtml.replace(
@@ -3537,10 +3525,10 @@ fanIndexHtml=fanIndexHtml.replace(
 `<img id="logo" src="icons/${new192Name}">`
 )
 
-await ghPutFile(
+await publisherPutFile(
 token,
 fanIndexPath,
-fanIndexMeta.sha,
+fanIndexMeta.version,
 toBase64Utf8(fanIndexHtml),
 `BASE fan app icon sync v${newVersion}`
 )
@@ -3803,7 +3791,7 @@ renderLinks()
 
 hasLoadedState=true
 clearDirty()
-await syncLoadedSha()
+await syncLoadedVersion()
 
 setPill("warn","STATUS: loaded")
 log("Loaded current state.")
@@ -3909,14 +3897,14 @@ enablePublishIfReady()
 return
 }
 
-if(!loadedSha){
-setPill("bad","STATUS: sha required")
-log("Publish blocked: missing loaded SHA. Reload current state.")
+if(!loadedVersion){
+setPill("bad","STATUS: version required")
+log("Publish blocked: missing loaded version. Reload current state.")
 enablePublishIfReady()
 return
 }
 
-if(shaConflict){
+if(versionConflict){
 setPill("bad","STATUS: remote changed")
 log("Publish blocked: remote content changed. Reload current state.")
 enablePublishIfReady()
@@ -3934,15 +3922,15 @@ let icon512Name=null
 
 const iconFile=el.appIconInput.files[0]
 
-const meta=await ghGetFileMeta(token,TARGET_PATH)
+const meta=await publisherGetFileMeta(token,TARGET_PATH)
 
-if(!meta?.sha){
-throw new Error("GitHub SHA missing.")
+if(!meta?.version){
+throw new Error("Remote version identifier missing.")
 }
 
-if(meta.sha !== loadedSha){
-shaConflict=true
-el.lastSha.textContent=`sha: ${meta.sha}`
+if(meta.version !== loadedVersion){
+versionConflict=true
+el.lastVersion.textContent=`version: ${meta.version}`
 setPill("bad","STATUS: remote changed")
 log("Publish blocked: remote content changed. Reload current state.")
 enablePublishIfReady()
@@ -3979,7 +3967,7 @@ parseInt(v512Match[1],10)
 icon192Name=`icon-192-v${newVersion}.png`
 icon512Name=`icon-512-v${newVersion}.png`
 
-await ghPutFile(
+await publisherPutFile(
 token,
 `Fan App/icons/${icon192Name}`,
 undefined,
@@ -3987,7 +3975,7 @@ base64,
 `BASE icon v${newVersion} (192)`
 )
 
-await ghPutFile(
+await publisherPutFile(
 token,
 `Fan App/icons/${icon512Name}`,
 undefined,
@@ -3996,7 +3984,7 @@ base64,
 )
 
 const manifestPath="Fan App/manifest.json"
-const manifestMeta=await ghGetFileMeta(token,manifestPath)
+const manifestMeta=await publisherGetFileMeta(token,manifestPath)
 
 let manifest={}
 try{
@@ -4018,10 +4006,10 @@ type:"image/png"
 }
 ]
 
-await ghPutFile(
+await publisherPutFile(
 token,
 manifestPath,
-manifestMeta.sha,
+manifestMeta.version,
 toBase64Utf8(JSON.stringify(manifest,null,2)),
 `BASE manifest icon v${newVersion}`
 )
@@ -4049,7 +4037,7 @@ icon512Name=`icon-512-v${newVersion}.png`
 const base192=await makeBaseTemplateIconBase64(192)
 const base512=await makeBaseTemplateIconBase64(512)
 
-await ghPutFile(
+await publisherPutFile(
 token,
 `Fan App/icons/${icon192Name}`,
 undefined,
@@ -4057,7 +4045,7 @@ base192,
 `BASE template icon reset v${newVersion} (192)`
 )
 
-await ghPutFile(
+await publisherPutFile(
 token,
 `Fan App/icons/${icon512Name}`,
 undefined,
@@ -4066,7 +4054,7 @@ base512,
 )
 
 const manifestPath="Fan App/manifest.json"
-const manifestMeta=await ghGetFileMeta(token,manifestPath)
+const manifestMeta=await publisherGetFileMeta(token,manifestPath)
 
 let manifest={}
 try{
@@ -4088,10 +4076,10 @@ type:"image/png"
 }
 ]
 
-await ghPutFile(
+await publisherPutFile(
 token,
 manifestPath,
-manifestMeta.sha,
+manifestMeta.version,
 toBase64Utf8(JSON.stringify(manifest,null,2)),
 `BASE manifest template icon reset v${newVersion}`
 )
@@ -4143,16 +4131,16 @@ if(analytics){
 merged.analytics=analytics
 }
 
-const result=await ghPutFile(
+const result=await publisherPutFile(
 token,
 TARGET_PATH,
-meta.sha,
+meta.version,
 toBase64Utf8(JSON.stringify(merged,null,2)),
 "BASE publish"
 )
 
 const fanIndexPath="Fan App/index.html"
-const fanIndexMeta=await ghGetFileMeta(token,fanIndexPath)
+const fanIndexMeta=await publisherGetFileMeta(token,fanIndexPath)
 let fanIndexHtml=fromBase64Utf8(fanIndexMeta.content)
 
 const appName=escapeHtml(el.name.value.trim() || "App")
@@ -4198,18 +4186,19 @@ fanIndexHtml=fanIndexHtml.replace(
 `<img id="logo" src="icons/${icon192Name}?v=${cacheVersion}">`
 )
 
-await ghPutFile(
+await publisherPutFile(
 token,
 fanIndexPath,
-fanIndexMeta.sha,
+fanIndexMeta.version,
 toBase64Utf8(fanIndexHtml),
 "BASE HTML sync"
 )
 
-if(result?.content?.sha){
-loadedSha=result.content.sha
-shaConflict=false
-el.lastSha.textContent=`sha: ${result.content.sha}`
+const publishedVersion=result?.version || null
+if(publishedVersion){
+loadedVersion=publishedVersion
+versionConflict=false
+el.lastVersion.textContent=`version: ${publishedVersion}`
 }
 
 el.appIconInput.value=""
@@ -4232,6 +4221,22 @@ setPublishBusy(false)
 
 }
 
+el.publisherModuleUrl.addEventListener("input",()=>{
+const value=getPublisherModuleUrl()
+if(value)localStorage.setItem(LS_PUBLISHER_MODULE,value)
+else localStorage.removeItem(LS_PUBLISHER_MODULE)
+clearPublisherClient()
+clearVersionState()
+})
+
+el.publisherConfig.addEventListener("input",()=>{
+const value=String(el.publisherConfig.value || "")
+if(value.trim())localStorage.setItem(LS_PUBLISHER_CONFIG,value)
+else localStorage.removeItem(LS_PUBLISHER_CONFIG)
+clearPublisherClient()
+clearVersionState()
+})
+
 el.token.addEventListener("input",async()=>{
 const t=(el.token.value||"").trim()
 
@@ -4242,7 +4247,7 @@ localStorage.removeItem(LS_TOKEN)
 }
 
 if(hasLoadedState){
-await syncLoadedSha()
+await syncLoadedVersion()
 }else{
 enablePublishIfReady()
 }
@@ -4253,7 +4258,7 @@ localStorage.removeItem(LS_TOKEN)
 el.token.value=""
 hasLoadedState=false
 clearDirty()
-clearShaState()
+clearVersionState()
 setPublishBusy(false)
 setPill("warn","STATUS: ready")
 log("Creator key reset.")
@@ -4396,8 +4401,14 @@ function init(){
 
 initModules()
 
-el.repoLabel.textContent=`${OWNER}/${REPO}@${BRANCH}`
+el.publishingLabel.textContent="not connected"
 el.contentUrl.value=DEFAULT_CONTENT_URL
+
+const savedPublisherModule=(localStorage.getItem(LS_PUBLISHER_MODULE)||"").trim()
+if(savedPublisherModule)el.publisherModuleUrl.value=savedPublisherModule
+
+const savedPublisherConfig=localStorage.getItem(LS_PUBLISHER_CONFIG)||""
+if(savedPublisherConfig)el.publisherConfig.value=savedPublisherConfig
 
 const saved=(localStorage.getItem(LS_TOKEN)||"").trim()
 if(saved){
@@ -4422,7 +4433,7 @@ analyticsHydrated=false
 analyticsTouched=false
 setPublishBusy(false)
 clearDirty()
-clearShaState()
+clearVersionState()
 refreshPreview()
 
 }
