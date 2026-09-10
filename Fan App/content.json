@@ -7,7 +7,7 @@
   "background": {
     "enabled": true,
     "type": "image",
-    "url": "./media/background-image-1788193533405.png"
+    "url": "./media/background-image-1789059783704.png"
   },
   "heroMedia": {
     "enabled": true,
@@ -82,11 +82,11 @@
             "access": "public"
           },
           {
-            "id": "item-1786401000648-dd6af22ba220d",
-            "title": "The Y E",
+            "id": "item-1789059318940-9310a293d06d9",
+            "title": "Meet & Greet",
             "description": "",
-            "thumbnail": "./media/thumb-item-1786401000648-dd6af22ba220d-1786401034535.png",
-            "url": "./media/media-item-1786401000648-dd6af22ba220d-1786401032405.png",
+            "thumbnail": "./media/thumb-item-1789059318940-9310a293d06d9-1789059788163.png",
+            "url": "./media/media-item-1789059318940-9310a293d06d9-1789059785454.png",
             "access": "public"
           }
         ]
@@ -121,6 +121,17 @@
       "thumbnail": "./media/supporter-supporter-1786206667858-e61c32fb47ebc-1786206718538.jpg",
       "url": "https://youtu.be/AjTMWoxtu0I?si=RWpTIN3owXg7yL7F",
       "buttonText": "Open",
+      "enabled": true
+    },
+    {
+      "id": "supporter-1789059622341-1b42ff8f5ddda8",
+      "type": "supporter",
+      "name": "High Demand",
+      "tagline": "",
+      "description": "",
+      "thumbnail": "./media/supporter-supporter-1789059622341-1b42ff8f5ddda8-1789059788937.png",
+      "url": "https://www.instagram.com/highdemand2022?utm_source=ig_web_button_share_sheet&stkn=ZDNlZDc0MzIxNw==",
+      "buttonText": "Visit",
       "enabled": true
     }
   ],
