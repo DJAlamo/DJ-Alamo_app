@@ -113,14 +113,14 @@
   },
   "supporters": [
     {
-      "id": "supporter-1789236454122-e9540cd7fa4d3",
+      "id": "supporter-1789236801457-3f292febdcd91",
       "type": "collaborator",
-      "name": "BEANN",
+      "name": "Beann",
       "tagline": "Never Stop Running",
-      "description": "Hosted by DJ Alamo",
-      "thumbnail": "./media/supporter-supporter-1789236454122-e9540cd7fa4d3-1789236511518.jpg",
+      "description": "Hosted By DJ Alamo",
+      "thumbnail": "./media/supporter-supporter-1789236801457-3f292febdcd91-1789236805554.jpg",
       "url": "https://livemixtapes.com/mixtape/beann-never-stop-running",
-      "buttonText": "Visit Supporter",
+      "buttonText": "Click",
       "enabled": true
     }
   ],
