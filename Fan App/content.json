@@ -113,25 +113,14 @@
   },
   "supporters": [
     {
-      "id": "supporter-1786206667858-e61c32fb47ebc",
+      "id": "supporter-1789236454122-e9540cd7fa4d3",
       "type": "collaborator",
-      "name": "Set Me Free",
-      "tagline": "Dj Alamo Freeway",
-      "description": "",
-      "thumbnail": "./media/supporter-supporter-1786206667858-e61c32fb47ebc-1786206718538.jpg",
-      "url": "https://youtu.be/AjTMWoxtu0I?si=RWpTIN3owXg7yL7F",
-      "buttonText": "Open",
-      "enabled": true
-    },
-    {
-      "id": "supporter-1789059622341-1b42ff8f5ddda8",
-      "type": "supporter",
-      "name": "High Demand",
-      "tagline": "",
-      "description": "",
-      "thumbnail": "./media/supporter-supporter-1789059622341-1b42ff8f5ddda8-1789059788937.png",
-      "url": "https://www.instagram.com/highdemand2022?utm_source=ig_web_button_share_sheet&stkn=ZDNlZDc0MzIxNw==",
-      "buttonText": "Visit",
+      "name": "BEANN",
+      "tagline": "Never Stop Running",
+      "description": "Hosted by DJ Alamo",
+      "thumbnail": "./media/supporter-supporter-1789236454122-e9540cd7fa4d3-1789236511518.jpg",
+      "url": "https://livemixtapes.com/mixtape/beann-never-stop-running",
+      "buttonText": "Visit Supporter",
       "enabled": true
     }
   ],
