@@ -113,17 +113,6 @@
   },
   "supporters": [
     {
-      "id": "supporter-1789394283881-2b3c78bf1a544",
-      "type": "collaborator",
-      "name": "Respect The DJ PT. 30",
-      "tagline": "Belly Edition",
-      "description": "Hosted By Third World Don",
-      "thumbnail": "./media/supporter-supporter-1789394283881-2b3c78bf1a544-1789394705619.png",
-      "url": "https://topmixtapes.com/mixtape/Q42w1NtBlH",
-      "buttonText": "Visit",
-      "enabled": true
-    },
-    {
       "id": "supporter-1789394439949-e373b3d5e4bc2",
       "type": "collaborator",
       "name": "Beann",
@@ -143,6 +132,17 @@
       "thumbnail": "./media/supporter-supporter-1789394698036-18bfcfe8543e48-1789394709466.jpg",
       "url": "https://youtu.be/AjTMWoxtu0I?si=u4HrCROmwR2cfhEY",
       "buttonText": "Visit",
+      "enabled": true
+    },
+    {
+      "id": "supporter-1791218842997-0570d69c27af6",
+      "type": "collaborator",
+      "name": "Respect The DJ PT. 30",
+      "tagline": "Hosted By Third World Don",
+      "description": "",
+      "thumbnail": "./media/supporter-supporter-1791218842997-0570d69c27af6-1791219606979.png",
+      "url": "https://livemixtapes.com/mixtape/respected-the-dj-pt-30",
+      "buttonText": "Go!",
       "enabled": true
     }
   ],
