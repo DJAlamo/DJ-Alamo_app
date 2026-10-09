@@ -22,11 +22,12 @@
   },
   "pillColor": "#000000",
   "innerSurface": {
-    "style": "video",
+    "style": "image",
     "color": "#050505",
-    "url": "./media/inner-surface-video-1784059186375.mp4",
-    "video": "./media/inner-surface-video-1784059186375.mp4",
-    "backgroundVideo": "./media/inner-surface-video-1784059186375.mp4"
+    "url": "./media/inner-surface-image-1791549549036.png",
+    "image": "./media/inner-surface-image-1791549549036.png",
+    "wallpaper": "./media/inner-surface-image-1791549549036.png",
+    "backgroundImage": "./media/inner-surface-image-1791549549036.png"
   },
   "live": {
     "enabled": false,
