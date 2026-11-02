@@ -142,6 +142,17 @@
       "url": "https://livemixtapes.com/mixtape/respected-the-dj-pt-30",
       "buttonText": "Go!",
       "enabled": true
+    },
+    {
+      "id": "supporter-1793640279243-6e8a6d88266f3",
+      "type": "collaborator",
+      "name": "Who Go The Juice",
+      "tagline": "Mixtape",
+      "description": "new installment from the general Dj Alamo",
+      "thumbnail": "./media/supporter-supporter-1793640279243-6e8a6d88266f3-1793640305630.jpeg",
+      "url": "https://livemixtapes.com/mixtape/who-got-the-juice-1",
+      "buttonText": "GO!",
+      "enabled": true
     }
   ],
   "community": {
