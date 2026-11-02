@@ -153,6 +153,17 @@
       "url": "https://livemixtapes.com/mixtape/who-got-the-juice-1",
       "buttonText": "GO!",
       "enabled": true
+    },
+    {
+      "id": "supporter-1793648209518-3ce518f53579",
+      "type": "collaborator",
+      "name": "New Jack City ( Hustler Edition)",
+      "tagline": "Mix Tape",
+      "description": "#DJ MIX NEW INSTALLMENT FROM @IAMDJALAMO GET FAMILIAR AND TURN YOUR SPEAKERS UP .....",
+      "thumbnail": "./media/supporter-supporter-1793648209518-3ce518f53579-1793648221905.jpeg",
+      "url": "https://audiomack.com/dj-alamo/album/new-jack-city-hustler-edition",
+      "buttonText": "Go!",
+      "enabled": true
     }
   ],
   "community": {
