@@ -22,12 +22,9 @@
   },
   "pillColor": "#000000",
   "innerSurface": {
-    "style": "image",
-    "color": "#050505",
-    "url": "./media/inner-surface-image-1791549549036.png",
-    "image": "./media/inner-surface-image-1791549549036.png",
-    "wallpaper": "./media/inner-surface-image-1791549549036.png",
-    "backgroundImage": "./media/inner-surface-image-1791549549036.png"
+    "style": "default",
+    "color": "",
+    "url": ""
   },
   "live": {
     "enabled": false,
@@ -94,12 +91,10 @@
       }
     ],
     "presentation": {
-      "style": "video",
+      "style": "default",
       "color": "#050505",
-      "url": "./media/media-card-video-1791550931166.mov",
-      "animation": "float",
-      "video": "./media/media-card-video-1791550931166.mov",
-      "backgroundVideo": "./media/media-card-video-1791550931166.mov"
+      "url": "",
+      "animation": "float"
     },
     "externalMedia": [
       {
