@@ -2,22 +2,22 @@
   "name": "DJ ALAMO",
   "bio": "Djalamobookings@gamil.com",
   "contactEmail": "DJalamobookings@gmail.com",
-  "contactLabel": "Connect",
+  "contactLabel": "Email",
   "backgroundColor": "#000000",
   "background": {
     "enabled": true,
     "type": "image",
-    "url": "./media/background-image-1793637153864.gif"
+    "url": "./media/background-image-1795706822516.jpg"
   },
   "heroMedia": {
     "enabled": true,
     "type": "image",
-    "url": "./media/hero-image-1789228368418.png",
+    "url": "./media/hero-image-1795706824590.png",
     "animation": "float"
   },
   "chime": {
     "enabled": true,
-    "url": "./media/chime-1793639551995.mp3",
+    "url": "./media/chime-1795706826840.mp3",
     "volume": 0.65
   },
   "pillColor": "#000000",
@@ -162,6 +162,17 @@
       "description": "#DJ MIX NEW INSTALLMENT FROM @IAMDJALAMO GET FAMILIAR AND TURN YOUR SPEAKERS UP .....",
       "thumbnail": "./media/supporter-supporter-1793648209518-3ce518f53579-1793648221905.jpeg",
       "url": "https://audiomack.com/dj-alamo/album/new-jack-city-hustler-edition",
+      "buttonText": "Go!",
+      "enabled": true
+    },
+    {
+      "id": "supporter-1795706670279-4d2ee434f54658",
+      "type": "collaborator",
+      "name": "Street Motion Vol 1",
+      "tagline": "DJ Alamo, Dj Imnit",
+      "description": "STREET MOTION VOL. 1 is a collab compilation project presented by IMNIT Records & Alamo Allstars LLC, hosted by DJ IMNIT & DJ Alamo.",
+      "thumbnail": "./media/supporter-supporter-1795706670279-4d2ee434f54658-1795706833257.png",
+      "url": "https://livemixtapes.com/mixtape/dj-alamo-street-motion",
       "buttonText": "Go!",
       "enabled": true
     }
