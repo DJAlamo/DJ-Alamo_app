@@ -22,9 +22,12 @@
   },
   "pillColor": "#000000",
   "innerSurface": {
-    "style": "default",
-    "color": "",
-    "url": ""
+    "style": "image",
+    "color": "#050505",
+    "url": "./media/inner-surface-image-1795707077426.gif",
+    "image": "./media/inner-surface-image-1795707077426.gif",
+    "wallpaper": "./media/inner-surface-image-1795707077426.gif",
+    "backgroundImage": "./media/inner-surface-image-1795707077426.gif"
   },
   "live": {
     "enabled": false,
