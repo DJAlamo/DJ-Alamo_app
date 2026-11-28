@@ -178,6 +178,17 @@
       "url": "https://livemixtapes.com/mixtape/dj-alamo-street-motion",
       "buttonText": "Go!",
       "enabled": true
+    },
+    {
+      "id": "supporter-1795884357798-5b674552d5e4f8",
+      "type": "collaborator",
+      "name": "The Take Over Volume 1",
+      "tagline": "Eness/ Dj Alamo",
+      "description": "Eness & DJ Alamo reunite for another classic mixtape.  The Take Over represents what’s missing from the genre — a magnificent display of all the elements of Hip Hop (not rap music, to be clear).",
+      "thumbnail": "./media/supporter-supporter-1795884357798-5b674552d5e4f8-1795884365196.png",
+      "url": "https://livemixtapes.com/mixtape/eness-the-take-over",
+      "buttonText": "Go!",
+      "enabled": true
     }
   ],
   "community": {
