@@ -7,7 +7,7 @@
   "background": {
     "enabled": true,
     "type": "image",
-    "url": "./media/background-image-1795706822516.jpg"
+    "url": "./media/background-image-1795875528308.png"
   },
   "heroMedia": {
     "enabled": true,
@@ -16,18 +16,18 @@
     "animation": "float"
   },
   "chime": {
-    "enabled": true,
-    "url": "./media/chime-1795706826840.mp3",
+    "enabled": false,
+    "url": "",
     "volume": 0.65
   },
-  "pillColor": "#831100",
+  "pillColor": "#444444",
   "innerSurface": {
     "style": "image",
     "color": "#050505",
-    "url": "./media/inner-surface-image-1795707077426.gif",
-    "image": "./media/inner-surface-image-1795707077426.gif",
-    "wallpaper": "./media/inner-surface-image-1795707077426.gif",
-    "backgroundImage": "./media/inner-surface-image-1795707077426.gif"
+    "url": "./media/inner-surface-image-1795875531230.gif",
+    "image": "./media/inner-surface-image-1795875531230.gif",
+    "wallpaper": "./media/inner-surface-image-1795875531230.gif",
+    "backgroundImage": "./media/inner-surface-image-1795875531230.gif"
   },
   "live": {
     "enabled": true,
